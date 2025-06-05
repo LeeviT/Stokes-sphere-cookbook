@@ -1,12 +1,13 @@
 # This parameter file creates a 2-dimensional
-# model, which implements a Stokes sphere falling due to gravity
-# in a box filled less dense fluid
+# model, which implements a Stokes sphere, which
+# density etc. are dictated by a lookup table
+# created using MAGEMin.
 
 # 2D 
 set Dimension = 2
 set Use years in output instead of seconds = true
 set Start time                             = 0
-set End time                               = 50e6
+set End time                               = 100e6
 set CFL number                             = 3.0            # This is pretty much the absolute maximum to get stable solution
 set Maximum time step                      = 500e3
 set Output directory                       = stokes_sphere
@@ -35,7 +36,6 @@ subsection Gravity model
   end
 end
 
-# 
 set Pressure normalization                 = surface
 
 # Boundary conditions
@@ -57,7 +57,8 @@ subsection Boundary velocity model
     set Tangential velocity boundary indicators = top, bottom, left, right
 end
 
-# Temperature model
+# Linear geotherm from 0 °C to 1300 °C until depth of 50 km, and another linear geotherm from 1300 °C
+# to 2000 °C to the bottom. The sphere has temperature of 200 °C in the beginning.
 subsection Initial temperature model
     set List of model names = function
     subsection Function
@@ -65,7 +66,7 @@ subsection Initial temperature model
         set Function expression = y <= y0 + sqrt(r^2 - (x - x0)^2) && y >= y0 - sqrt(r^2 - (x - x0)^2)  \
                                     ? 473.15 :                                                          \
                                   y >= 750e3                                                            \
-                                    ? 273.15 + 1300 * ((800e3 - y) / 50e3) :                           \
+                                    ? 273.15 + 1300 * ((800e3 - y) / 50e3) :                            \
                                   y < 750e3                                                             \
                                     ? 273.15 + 1300 + 700 * ((750e3 - y) / 750e3) :                     \
                                     0;
@@ -121,8 +122,8 @@ subsection Material model
     set Viscous flow law 	      = composite
     set Viscosity averaging scheme    = geometric
     set Reference temperature         = 493.15
-    # Isoviscous asthenospheric composition at 1e20 Pa*s, somewhat rigid sphere at 1e21-1e23 Pa*s
-    set Minimum viscosity             = 1e20, 1e20, 1e21
+    # Isoviscous asthenospheric composition at 1e20 Pa*s, somewhat rigid sphere at 1e22-1e23 Pa*s
+    set Minimum viscosity             = 1e20, 1e20, 1e22
     set Maximum viscosity             = 1e20, 1e20, 1e23
   end
 end
@@ -145,13 +146,14 @@ subsection Mesh refinement
   set Strategy                           = composition, strain rate, density, isosurfaces
   set Refinement criteria merge operation      = max
 
+  # Restrict min and max resolution of the basaltic sphere and pyrolitic asthenosphere
   subsection Isosurfaces
     set Isosurfaces = 8, 10, 2_basaltic_OC: 0.05 | 1.5; 4, 6, 1_asth_M: 0.05 | 1.5;
   end
 
   set Run postprocessors on initial refinement = true
 
-  # This prohibits Stokes solves when the mesh is not maximally refined yet during timestep 0.
+  # This prohibits Stokes solves when the mesh is not maximally refined yet during timestep 0
   set Skip solvers on initial refinement = true
   set Time steps between mesh refinement = 5
 end
@@ -172,7 +174,7 @@ end
 
 subsection Solver parameters
   set Composition solver tolerance = 1e-12
-  set Temperature solver tolerance = 1e-10
+  set Temperature solver tolerance = 1e-12
   subsection Stokes solver parameters
     set Stokes solver type = block GMG
     set Number of cheap Stokes solver steps = 4000
