@@ -5,6 +5,7 @@
 # plotting, TidierData for filtering/manipulating data, DelimitedFiles for output.
 using DataFrames, CSV, CairoMakie, TidierData, DelimitedFiles
 
+# This 
 function porosityscaling(pressure, resolution)
     rho0 = 2500.0
     g = 9.81
@@ -38,7 +39,7 @@ filtereddf = @chain df begin
         Vp = var"Vp[km/s]", Vs = var"Vs[km/s]")
     # Filter out data of individual minerals and preserve bulk rock (=system) composition data.
     @filter(phase == "system")
-    # Convert subzero (=unphysical) heat expansivity values to zero.
+    # Convert subzero (=unphysical) heat expansivity values to zero or to a reasonable upper limit.
     @mutate(alphafilt = case_when(alpha < 0.0 => 0.0, alpha > 0.75e-4 => 0.75e-4, alpha > 0.0 => alpha))
     # Convert pressure from kbar to bar and temperature from celsius to kelvin. 
     @mutate(P = 1e3 * P, T = 273.15 + T)
@@ -55,6 +56,7 @@ filtereddf.Cp = strip.(filtereddf.Cp, '[')
 filtereddf.Cp = strip.(filtereddf.Cp, ']')
 filtereddf.Cp = parse.(Float64, filtereddf.Cp)
 
+# Convert unphysical specific heat values within reasonable limits.
 filtereddf = @chain filtereddf begin
     @mutate(Cp = case_when(Cp < 750.0 => 750.0, Cp > 1500.0 => 1500.0, Cp > 0.0 => Cp))
 end
@@ -72,6 +74,7 @@ end
 # phioceanic = porosityscaling(filtereddf.P, resolution)
 # filtereddf.density = reshape((reshape(filtereddf.density, resolution, resolution)' .* (1.0 .- phioceanic) .+ 1000.0 .* phioceanic)', resolution^2)
 
+# Restrict density between certain limits to add isostatic stability in geodynamic model.
 filtereddf = @chain filtereddf begin
     @mutate(density = case_when(density < 2400.0 => 2400.0, density > 4900.0 => 4900.0, density > 0.0 => density))
 end
