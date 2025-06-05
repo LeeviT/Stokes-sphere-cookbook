@@ -1,1 +1,0 @@
-# Stokes-sphere-cookbook
