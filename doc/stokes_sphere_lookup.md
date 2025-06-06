@@ -1,1 +1,3 @@
 This cookbook demonstrates how conduction warms a sphere, which density depends on pressure-temperature conditions via lookup table, and which starts falling due to phases changes taking place.
+
+Subduction on Earth since the Proterozoic has been likely driven mostly by gravity pull of negatively buoyant slabs. While such pulling force could be built by cooling of an oceanic plate, also petrological phase changes in the subducting oceanic crust play major role. Especially, to construct self-consistent subduction models, density variations dictated by phase changes could be hardly ignored. Currently ASPECT provides possibility to implement simpler phase changes by using Clapeyron slopes, or by reading in lookup tables computed by PerpleX [ref]. To include 
